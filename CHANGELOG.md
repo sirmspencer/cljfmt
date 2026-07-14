@@ -1,3 +1,10 @@
+## 0.16.5 (2026-07-14)
+
+* Fixed parsing of `ns` require vectors with `#_` comments (#416)
+* Fixed parsing of `ns` require vectors with reader conditionals (#418)
+* Fixed exempted blank lines in function literals (#420)
+* Fixed `--read-clj-config-files` CLI flag being ignored (#421)
+
 ## 0.16.4 (2026-04-13)
 
 * Added validation of user configuration (#406)
