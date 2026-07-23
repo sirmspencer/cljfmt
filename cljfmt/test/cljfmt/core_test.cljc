@@ -3147,16 +3147,16 @@
           " :longer 2}"]
          {:align-map-columns?       true
           :max-column-alignment-gap 10})))
-  (testing "outlier key falls back to 1 space; others stay aligned"
+  (testing "anchor demoted when large key forces excessive gaps; short keys align among themselves"
     (is (reformats-to?
          ["{{:keys [several things here]} :sub-map"
           " {:keys [several things]} :sub-map2"
           " :keys                         [direct values]"
           " :as                           everything}"]
          ["{{:keys [several things here]} :sub-map"
-          " {:keys [several things]}      :sub-map2"
+          " {:keys [several things]} :sub-map2"
           " :keys [direct values]"
-          " :as everything}"]
+          " :as   everything}"]
          {:align-map-columns?       true
           :max-column-alignment-gap 10})))
   (testing "nil gap (default) aligns all columns regardless of width"
@@ -3190,6 +3190,78 @@
           " :longer 2}"]
          ["{:x 1"
           " :longer 2}"]
+         {:align-map-columns?       true
+          :max-column-alignment-gap 5}))))
+
+(deftest test-single-column-first-element
+  (testing "first binding in let with value on next line is treated as single-column"
+    (is (reformats-to?
+         ["(let [{:keys [endpoint mapper]}"
+          "      (get-in config [:auth])"
+          "      token (get response \"access_token\")"
+          "      type (get response \"token_type\")]"
+          "  {:token token})"]
+         ["(let [{:keys [endpoint mapper]}"
+          "      (get-in config [:auth])"
+          "      token (get response \"access_token\")"
+          "      type  (get response \"token_type\")]"
+          "  {:token token})"]
+         {:align-form-columns?        true
+          :align-single-column-lines? false})))
+  (testing "first key in map with value on next line is treated as single-column"
+    (is (reformats-to?
+         ["{:very-long-map-key"
+          " wrapped-value"
+          " :host \"localhost\""
+          " :port 5432"
+          " :timeout 30}"]
+         ["{:very-long-map-key"
+          " wrapped-value"
+          " :host    \"localhost\""
+          " :port    5432"
+          " :timeout 30}"]
+         {:align-map-columns?         true
+          :align-single-column-lines? false})))
+  (testing "first binding single-column with align-single-column-lines? true uses it as anchor"
+    (is (reformats-to?
+         ["(let [{:keys [endpoint mapper]}"
+          "      (get-in config [:auth])"
+          "      token (get response \"access_token\")"
+          "      type (get response \"token_type\")]"
+          "  {:token token})"]
+         ["(let [{:keys [endpoint mapper]}"
+          "      (get-in config [:auth])"
+          "      token                     (get response \"access_token\")"
+          "      type                      (get response \"token_type\")]"
+          "  {:token token})"]
+         {:align-form-columns?        true
+          :align-single-column-lines? true}))))
+
+(deftest test-max-column-alignment-gap-cascade
+  (testing "anchor demoted until all shorter keys fit within gap — form columns"
+    (is (reformats-to?
+         ["(let [a 1"
+          "      abcde 2"
+          "      abcdefg 3"
+          "      long-name 4]"
+          "  [a abcde abcdefg long-name])"]
+         ["(let [a     1"
+          "      abcde 2"
+          "      abcdefg 3"
+          "      long-name 4]"
+          "  [a abcde abcdefg long-name])"]
+         {:align-form-columns?      true
+          :max-column-alignment-gap 5})))
+  (testing "anchor demoted until all shorter keys fit within gap — map columns"
+    (is (reformats-to?
+         ["{:a \"x\""
+          " :abcde \"y\""
+          " :abcdefg \"z\""
+          " :long-key \"w\"}"]
+         ["{:a     \"x\""
+          " :abcde \"y\""
+          " :abcdefg \"z\""
+          " :long-key \"w\"}"]
          {:align-map-columns?       true
           :max-column-alignment-gap 5}))))
 

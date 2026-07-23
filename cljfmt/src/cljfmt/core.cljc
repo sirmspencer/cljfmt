@@ -634,9 +634,10 @@
                max 0 (str/split lines #"\r?\n"))))
 
 (defn- single-column-line? [zloc]
-  (and (let [zloc (skip-whitespace-and-commas (z/right* zloc) z/right*)]
-         (or (nil? zloc) (line-break? zloc)))
-       (line-break? (skip-whitespace-and-commas (z/left* zloc) z/left*))))
+  (and (let [right (skip-whitespace-and-commas (z/right* zloc) z/right*)]
+         (or (nil? right) (line-break? right)))
+       (let [left (skip-whitespace-and-commas (z/left* zloc) z/left*)]
+         (or (nil? left) (line-break? left)))))
 
 (defn- node-str-length [zloc]
   (-> zloc z/node n/string count))
@@ -676,7 +677,7 @@
     (if max-gap
       (let [old-gap (count-spaces (z/left* zloc))
             new-gap (+ old-gap delta)]
-        (pad-node zloc (if (> new-gap max-gap) (- 1 old-gap) delta)))
+        (pad-node zloc (if (or (< new-gap 1) (> new-gap max-gap)) (- 1 old-gap) delta)))
       (pad-node zloc delta))))
 
 (defn- edit-column [zloc column f]
@@ -711,13 +712,23 @@
   (let [reduce-fn (if (:blank-lines-separate-alignment? opts)
                     reduce-column-group
                     reduce-columns)
-        maximizer (fn [zloc c max-pos]
+        max-gap   (:max-column-alignment-gap opts)
+        collector (fn [zloc c positions]
                     (if (and (= c (dec col))
                              (or (:align-single-column-lines? opts)
                                  (not (single-column-line? zloc))))
-                      (max max-pos (node-end-position zloc))
-                      max-pos))]
-    (inc (reduce-fn zloc maximizer 0))))
+                      (conj positions (node-end-position zloc))
+                      positions))
+        positions (reduce-fn zloc collector [])
+        anchor    (when (seq positions)
+                    (if max-gap
+                      (let [min-pos   (apply min positions)
+                            threshold (+ min-pos max-gap)]
+                        (->> positions
+                             (filter #(<= % threshold))
+                             (apply max)))
+                      (apply max positions)))]
+    (inc (or anchor 0))))
 
 (defn- align-one-column
   [zloc col {:keys [blank-lines-separate-alignment?] :as opts}]
