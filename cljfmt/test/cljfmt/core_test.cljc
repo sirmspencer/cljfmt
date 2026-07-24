@@ -2798,6 +2798,32 @@
           " :key             3}"]
          {:align-map-columns?         true
           :align-single-column-lines? true})))
+  (testing "map with first-position wrapped value, true"
+    (is (reformats-to?
+         ["{:very-long-map-key"
+          " wrapped-value"
+          " :host \"localhost\""
+          " :port 5432"
+          " :timeout 30}"]
+         ["{:very-long-map-key"
+          " wrapped-value"
+          " :host              \"localhost\""
+          " :port              5432"
+          " :timeout           30}"]
+         {:align-map-columns?         true
+          :align-single-column-lines? true})))
+  (testing "map with last-position wrapped value, true"
+    (is (reformats-to?
+         ["{:short 1"
+          " :timeout 30"
+          " :very-long-key"
+          " wrapped}"]
+         ["{:short         1"
+          " :timeout       30"
+          " :very-long-key"
+          " wrapped}"]
+         {:align-map-columns?         true
+          :align-single-column-lines? true})))
   (testing "let with wrapped value - :align-single-column-lines? true causes excessive padding"
     (is (reformats-to?
          ["(let [a 2"
@@ -2812,6 +2838,34 @@
           "        (+ e 1 1 1 1 1 1 1 1))"
           "      c                        3]"
           "  (+ a c))"]
+         {:align-form-columns?        true
+          :align-single-column-lines? true})))
+  (testing "let with first-position wrapped value, true"
+    (is (reformats-to?
+         ["(let [{:keys [endpoint mapper]}"
+          "      (get-in config [:auth])"
+          "      token (get response \"access_token\")"
+          "      type (get response \"token_type\")]"
+          "  {:token token})"]
+         ["(let [{:keys [endpoint mapper]}"
+          "      (get-in config [:auth])"
+          "      token                     (get response \"access_token\")"
+          "      type                      (get response \"token_type\")]"
+          "  {:token token})"]
+         {:align-form-columns?        true
+          :align-single-column-lines? true})))
+  (testing "let with last-position wrapped value, true"
+    (is (reformats-to?
+         ["(let [short 1"
+          "      longer-key 2"
+          "      {:keys [endpoint mapper]}"
+          "      (get-in config [:auth])]"
+          "  [short longer-key])"]
+         ["(let [short                     1"
+          "      longer-key                2"
+          "      {:keys [endpoint mapper]}"
+          "      (get-in config [:auth])]"
+          "  [short longer-key])"]
          {:align-form-columns?        true
           :align-single-column-lines? true})))
   (testing "map with wrapped value - :align-single-column-lines? false (default) compact alignment"
@@ -2840,6 +2894,32 @@
           " (fn [a b c d e]"
           "   (+ a b c d e))}"]
          {:align-map-columns? true})))
+  (testing "map with first-position wrapped value, false"
+    (is (reformats-to?
+         ["{:very-long-map-key"
+          " wrapped-value"
+          " :host \"localhost\""
+          " :port 5432"
+          " :timeout 30}"]
+         ["{:very-long-map-key"
+          " wrapped-value"
+          " :host    \"localhost\""
+          " :port    5432"
+          " :timeout 30}"]
+         {:align-map-columns?         true
+          :align-single-column-lines? false})))
+  (testing "map with last-position wrapped value, false"
+    (is (reformats-to?
+         ["{:short 1"
+          " :timeout 30"
+          " :very-long-key"
+          " wrapped}"]
+         ["{:short   1"
+          " :timeout 30"
+          " :very-long-key"
+          " wrapped}"]
+         {:align-map-columns?         true
+          :align-single-column-lines? false})))
   (testing "let with wrapped value - :align-single-column-lines? false (default) compact alignment"
     (is (reformats-to?
          ["(let [a 2"
@@ -2855,6 +2935,34 @@
           "      c 3]"
           "  (+ a c))"]
          {:align-form-columns? true})))
+  (testing "let with first-position wrapped value, false"
+    (is (reformats-to?
+         ["(let [{:keys [endpoint mapper]}"
+          "      (get-in config [:auth])"
+          "      token (get response \"access_token\")"
+          "      type (get response \"token_type\")]"
+          "  {:token token})"]
+         ["(let [{:keys [endpoint mapper]}"
+          "      (get-in config [:auth])"
+          "      token (get response \"access_token\")"
+          "      type  (get response \"token_type\")]"
+          "  {:token token})"]
+         {:align-form-columns?        true
+          :align-single-column-lines? false})))
+  (testing "let with last-position wrapped value, false"
+    (is (reformats-to?
+         ["(let [short 1"
+          "      longer-key 2"
+          "      {:keys [endpoint mapper]}"
+          "      (get-in config [:auth])]"
+          "  [short longer-key])"]
+         ["(let [short      1"
+          "      longer-key 2"
+          "      {:keys [endpoint mapper]}"
+          "      (get-in config [:auth])]"
+          "  [short longer-key])"]
+         {:align-form-columns?        true
+          :align-single-column-lines? false})))
   (testing "normal alignment unaffected when all values are on same line"
     (is (reformats-to?
          ["{:short 1"
