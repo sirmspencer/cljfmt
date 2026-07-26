@@ -634,9 +634,10 @@
                max 0 (str/split lines #"\r?\n"))))
 
 (defn- single-column-line? [zloc]
-  (and (let [zloc (skip-whitespace-and-commas (z/right* zloc) z/right*)]
-         (or (nil? zloc) (line-break? zloc)))
-       (line-break? (skip-whitespace-and-commas (z/left* zloc) z/left*))))
+  (and (let [right (skip-whitespace-and-commas (z/right* zloc) z/right*)]
+         (or (nil? right) (line-break? right)))
+       (let [left (skip-whitespace-and-commas (z/left* zloc) z/left*)]
+         (or (nil? left) (line-break? left)))))
 
 (defn- node-str-length [zloc]
   (-> zloc z/node n/string count))
