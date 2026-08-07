@@ -339,6 +339,28 @@ In order to load the standard configuration file from Leiningen, add the
    :long-name 4} ;; ends past column 7, 1 space
   ```
 
+* `:break-on-max-column-alignment-width?` -
+  true if cljfmt should move a value onto its own line, indented under
+  the keys, when its key ends past the column set by
+  `:max-column-alignment-width`, rather than falling back to a single
+  space on the same line. Has no effect unless
+  `:max-column-alignment-width` is also set. Defaults to false.
+  **Experimental.**
+
+  ```clojure
+  ;; Input:
+  {:a 1
+   :bb 2
+   :ccccccc 3}
+
+  ;; With :align-map-columns? true, :max-column-alignment-width 4,
+  ;; and :break-on-max-column-alignment-width? true:
+  {:a  1        ;; ends within column 4, padded to value column
+   :bb 2        ;; ends at column 4, sets the value column
+   :ccccccc     ;; ends past column 4, value moves to its own line
+   3}
+  ```
+
 * `:blank-lines-separate-alignment?` -
   true if cljfmt should treat blank lines as separators when aligning
   columns. When enabled, alignment groups are separated by blank lines,
