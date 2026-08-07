@@ -3234,6 +3234,56 @@
           :max-column-alignment-width 7
           :max-column-alignment-gap   3}))))
 
+(deftest test-break-on-max-column-alignment-width
+  (testing "form: the one outlier value is moved to its own line, indented under the bindings"
+    (is (reformats-to?
+         ["(let [a 1"
+          "      bb 2"
+          "      ccccccc 3]"
+          "  body)"]
+         ["(let [a  1"
+          "      bb 2"
+          "      ccccccc"
+          "      3]"
+          "  body)"]
+         {:align-form-columns?                  true
+          :max-column-alignment-width           8
+          :break-on-max-column-alignment-width? true})))
+  (testing "map: the one outlier value is moved to its own line, indented under the keys"
+    (is (reformats-to?
+         ["{:a \"x\""
+          " :bb \"y\""
+          " :ccccccc \"z\"}"]
+         ["{:a  \"x\""
+          " :bb \"y\""
+          " :ccccccc"
+          " \"z\"}"]
+         {:align-map-columns?                   true
+          :max-column-alignment-width           4
+          :break-on-max-column-alignment-width? true})))
+  (testing "no effect when :max-column-alignment-width is not set"
+    (is (reformats-to?
+         ["{:x 1"
+          " :longer 2}"]
+         ["{:x 1"
+          " :longer 2}"]
+         {:align-map-columns?                   true
+          :max-column-alignment-gap             5
+          :break-on-max-column-alignment-width? true})))
+  (testing "value already on its own line is left alone (idempotent)"
+    (is (reformats-to?
+         ["{:a  1"
+          " :bb 2"
+          " :ccccccc"
+          " 3}"]
+         ["{:a  1"
+          " :bb 2"
+          " :ccccccc"
+          " 3}"]
+         {:align-map-columns?                   true
+          :max-column-alignment-width           4
+          :break-on-max-column-alignment-width? true}))))
+
 (deftest test-realign-form
   (is (= "
 {:x   1
