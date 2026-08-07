@@ -386,6 +386,7 @@
    :max-column-alignment-width            nil
    :blank-line-forms                      blank-line-forms
    :blank-lines-separate-alignment?       false
+   :break-on-max-column-alignment-width?  false
    :extra-aligned-forms                   {}
    :extra-blank-line-forms                {}
    :extra-indents                         {}
@@ -671,16 +672,31 @@
 (defn- count-spaces [zloc]
   (if (space? zloc) (node-str-length zloc) 0))
 
-(defn- pad-to-position [zloc start-position {max-gap     :max-column-alignment-gap
-                                             align-width :max-column-alignment-width}]
-  {:pre [(or (nil? max-gap) (pos-int? max-gap))
-         (or (nil? align-width) (pos-int? align-width))]}
+(defn- break-to-own-line [zloc]
+  (let [indent (coll-indent zloc)]
+    (-> zloc
+        z/left*
+        (z/replace* (n/newlines 1))
+        z/right*
+        (z/insert-left* (whitespace indent)))))
+
+(defn- pad-to-position [zloc {:keys [position threshold]}
+                        {max-gap :max-column-alignment-gap
+                         break?  :break-on-max-column-alignment-width?}]
+  {:pre [(or (nil? max-gap) (pos-int? max-gap))]}
   (let [old-gap (count-spaces (z/left* zloc))
-        delta   (- start-position (margin zloc))
-        new-gap (+ old-gap delta)]
-    (if (or (< new-gap 1)
-            (and max-gap (> new-gap max-gap)))
+        delta   (- position (margin zloc))
+        new-gap (+ old-gap delta)
+        key-end (- (margin zloc) old-gap)]
+    (cond
+      (and break? threshold (> key-end threshold))
+      (break-to-own-line zloc)
+
+      (or (< new-gap 1)
+          (and max-gap (> new-gap max-gap)))
       (pad-node zloc (- 1 old-gap))
+
+      :else
       (pad-node zloc delta))))
 
 (defn- edit-column [zloc column f]
@@ -726,9 +742,10 @@
                       positions))
         positions (reduce-fn zloc collector [])
         threshold (when align-width (+ (apply min 0 positions) align-width))]
-    (inc (apply max 0 (if threshold
-                        (filter #(<= % threshold) positions)
-                        positions)))))
+    {:position  (inc (apply max 0 (if threshold
+                                    (filter #(<= % threshold) positions)
+                                    positions)))
+     :threshold threshold}))
 
 (defn- align-one-column
   [zloc col {:keys [blank-lines-separate-alignment?] :as opts}]
