@@ -3345,6 +3345,37 @@
            [";; AAAAA BBBBB CCCCC DDDDD EEEEE FFFFF"
             ";; GGGGG HHHHH"]
             {:break-on {:comments 40}})))
+    (testing "breaks comment preceding a form"
+      (is (reformats-to?
+           [";; AAAAA BBBBB CCCCC DDDDD EEEEE FFFFF GGGGG HHHHH"
+            "(defn foo [x] x)"]
+           [";; AAAAA BBBBB CCCCC DDDDD EEEEE FFFFF"
+            ";; GGGGG HHHHH"
+            "(defn foo [x] x)"]
+            {:break-on {:comments 40}})))
+    (testing "breaks indented comment without losing following code"
+      (is (reformats-to?
+           ["(defn foo"
+            "  (let [x 1]"
+            "    ;; AAAAA BBBBB CCCCC DDDDD EEEEE FFFFF GGGGG HHHHH"
+            "    x))"]
+           ["(defn foo"
+            "  (let [x 1]"
+            "    ;; AAAAA BBBBB CCCCC DDDDD EEEEE FFFFF"
+            "    ;; GGGGG HHHHH"
+            "    x))"]
+            {:break-on {:comments 40}})))
+    (testing "breaks long comment over multiple continuation lines"
+      (is (reformats-to?
+           ["(defn foo"
+            "  ;; AAAAA BBBBB CCCCC DDDDD EEEEE FFFFF GGGGG HHHHH IIIII"
+            "  x)"]
+           ["(defn foo"
+            "  ;; AAAAA BBBBB CCCCC DDDDD"
+            "  ;; EEEEE FFFFF GGGGG HHHHH"
+            "  ;; IIIII"
+            "  x)"]
+            {:break-on {:comments 25}})))
     (testing "short comment not broken"
       (is (reformats-to?
            [";; short"]
