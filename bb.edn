@@ -15,9 +15,12 @@
         :extra-paths ["cljfmt/test"]
         :requires ([clojure.test :as t]
                    [cljfmt.core-test]
-                   [cljfmt.config-test])
-        :task (let [{:keys [fail error]} (t/run-tests 'cljfmt.config-test
-                                                      'cljfmt.core-test)]
+                   [cljfmt.config-test]
+                   [cljfmt.rules.split-keypairs-over-multiple-lines-test])
+        :task (let [{:keys [fail error]}
+                    (t/run-tests 'cljfmt.config-test
+                                 'cljfmt.core-test
+                                 'cljfmt.rules.split-keypairs-over-multiple-lines-test)]
                 (when (or (pos? fail)
                           (pos? error))
                   (throw (ex-info "Tests failed" {:babashka/exit 1}))))}}}

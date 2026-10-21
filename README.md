@@ -432,9 +432,16 @@ In order to load the standard configuration file from Leiningen, add the
   other references in the `ns` forms at the top of your namespaces.
   Defaults to false.
 
+* `:split-keypairs-over-multiple-lines` -
+  breaks hashmaps so that each key and value pair is on its own line. The
+  value decides which maps are affected: `:always` affects every map,
+  `:mixed` only maps that already span more than one line, and
+  `:multiline` only maps containing a keypair that spans more than one
+  line. Defaults to nil, which leaves maps alone. See
+  [the examples](docs/rules/split-keypairs-over-multiple-lines.md).
+
 * `:split-keypairs-over-multiple-lines?` -
-  true if cljfmt should break hashmaps onto multiple lines. This will
-  convert `{:a 1 :b 2}` to `{:a 1\n:b 2}`. Defaults to false.
+  deprecated, alias for `:split-keypairs-over-multiple-lines :always`.
 
 [indents.md]: docs/INDENTS.md
 [community style recommendation]: https://guide.clojure.style/#one-space-indent
